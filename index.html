@@ -8,66 +8,78 @@
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: flex-start;
-      padding-top: 30px;
+      overflow: hidden;
     }
     .screen {
-      width: 300px;
+      width: 100%;
       text-align: center;
-      padding: 15px;
-      font-size: 22px;
-      background: #e9e9e9;
-      border-radius: 10px;
-      margin-bottom: 10px;
+      font-size: 26px;
+      background: #111;
+      padding: 30px 0;
       letter-spacing: 2px;
+      font-weight: bold;
     }
     .dialpad {
       display: grid;
       grid-template-columns: repeat(3, 80px);
-      grid-gap: 10px;
+      grid-gap: 15px;
       justify-content: center;
+      padding-bottom: 20px;
     }
     .btn {
-      padding: 20px;
-      background-color: white;
-      font-size: 22px;
+      width: 75px;
+      height: 75px;
+      font-size: 24px;
       border-radius: 50%;
-      border: 2px solid #d6d6d6;
+      background: #222;
+      color: white;
+      border: 1px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background 0.2s;
     }
     .btn:active {
-      background-color: #f0f0f0;
+      background: #444;
     }
     .actions {
-      margin-top: 20px;
-      text-align: center;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      padding: 10px;
     }
     .call {
       background-color: #28a745;
-      color: white;
       border: none;
       padding: 14px 40px;
       border-radius: 30px;
       font-size: 18px;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
     }
     .delete {
-      font-size: 18px;
       background: none;
       border: none;
       color: #dc3545;
-      margin-left: 15px;
+      font-size: 22px;
       cursor: pointer;
     }
     .result {
-      margin-top: 20px;
       font-size: 16px;
-      color: #333;
+      text-align: center;
+      padding: 10px;
+      min-height: 40px;
     }
   </style>
 </head>
@@ -76,21 +88,23 @@
   <div class="screen" id="numberDisplay">Enter Number</div>
 
   <div class="dialpad">
-    <button class="btn" onclick="appendNumber('1')">1</button>
-    <button class="btn" onclick="appendNumber('2')">2</button>
-    <button class="btn" onclick="appendNumber('3')">3</button>
-    <button class="btn" onclick="appendNumber('4')">4</button>
-    <button class="btn" onclick="appendNumber('5')">5</button>
-    <button class="btn" onclick="appendNumber('6')">6</button>
-    <button class="btn" onclick="appendNumber('7')">7</button>
-    <button class="btn" onclick="appendNumber('8')">8</button>
-    <button class="btn" onclick="appendNumber('9')">9</button>
-    <button class="btn" onclick="appendNumber('0')">0</button>
+    <button class="btn" onclick="append('1')">1</button>
+    <button class="btn" onclick="append('2')">2</button>
+    <button class="btn" onclick="append('3')">3</button>
+    <button class="btn" onclick="append('4')">4</button>
+    <button class="btn" onclick="append('5')">5</button>
+    <button class="btn" onclick="append('6')">6</button>
+    <button class="btn" onclick="append('7')">7</button>
+    <button class="btn" onclick="append('8')">8</button>
+    <button class="btn" onclick="append('9')">9</button>
+    <button class="btn" onclick="append('*')">*</button>
+    <button class="btn" onclick="append('0')">0</button>
+    <button class="btn" onclick="append('#')">#</button>
   </div>
 
   <div class="actions">
-    <button class="call" onclick="checkAndCall()">📞 Call / Check</button>
-    <button class="delete" onclick="deleteNumber()">⌫</button>
+    <button class="call" onclick="checkAndCall()">📞</button>
+    <button class="delete" onclick="del()">⌫</button>
   </div>
 
   <div class="result" id="resultBox"></div>
@@ -99,31 +113,30 @@
     let number = "";
     const display = document.getElementById("numberDisplay");
     const resultBox = document.getElementById("resultBox");
+    let sentList = {};
 
-    function appendNumber(digit) {
-      if (number.length < 11) {
-        number += digit;
+    // Preload JSON
+    fetch('sent_list.json')
+      .then(res => res.json())
+      .then(data => sentList = data);
+
+    function append(d) {
+      if (number.length < 15) {
+        number += d;
         display.innerText = number;
       }
     }
 
-    function deleteNumber() {
+    function del() {
       number = number.slice(0, -1);
       display.innerText = number || "Enter Number";
       resultBox.innerText = "";
     }
 
-    async function checkAndCall() {
-      if (number.length < 10) {
-        alert("Enter a valid number");
-        return;
-      }
-
-      const res = await fetch('sent_list.json?' + Date.now());
-      const data = await res.json();
-
-      if (data[number]) {
-        resultBox.innerHTML = `✅ Reservation already sent to <strong>${data[number]}</strong><br>${number}`;
+    function checkAndCall() {
+      if (!number) return;
+      if (sentList[number]) {
+        resultBox.innerHTML = `✅ Reservation already sent to <strong>${sentList[number]}</strong><br>${number}`;
       } else {
         window.location.href = 'tel:' + number;
       }
